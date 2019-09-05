@@ -1,0 +1,44 @@
+install.packages('twitteR')
+install.packages('RCurl')
+install.packages('tm')
+install.packages('wordcloud')
+install.packages('SnowballC')
+library(twitteR)
+library(RCurl)
+library(tm)
+library(wordcloud)
+library(SnowballC)
+api_key="TbJedZQ0quWi8z4oHpB1bZEFi"
+api_secret="aFCKz7guEtVtFDhLPoxpsZK1hlhmR7bl3gwVwXEKJD0UwGaQ9b"
+access_token="401479763-8JouQVwjnDBiswBwVWpQvNRV1HEAE6gwKSfzmVYd"
+access_token_secret="ShUiGbleZv2QAheypYvtAGsVOXcS8JFAi2vVRdvXfSXw0"
+
+setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
+MyTweets=searchTwitter('AspergerGirl',n=200,lang ='en' )
+head(MyTweets)
+t
+Tweet_Daa_Frame=do.call('rbind',lapply(MyTweets,as.data.frame))
+Tweet_Data_Frame$text= sapply(Tweet_Data_Frame$text,function(row) iconv(row,"latin1","ASCII",sub=""))
+
+Tweets=Tweet_Data_Frame$text
+Corpus=Corpus(VectorSource(Tweets))
+Corpus[[20]][1]
+
+Corpus=tm_map(Corpus,content_transformer(tolower))
+Corpus=tm_map(Corpus,PlainTextDocument)
+Corpus=tm_map(Corpus,removePunctuation)
+Corpus=tm_map(Corpus,removeNumbers)
+Corpus=tm_map(Corpus,removeWords,stopwords('english'))
+Corpus=tm_map(Corpus,removeWords,c('aspergergirl'))
+Corpus[[20]][1]
+
+TDM<-TermDocumentMatrix(Corpus)
+TDM<-as.matrix(TDM)
+TDM<-sort(rowSums(TDM),decreasing = TRUE)
+TDM<-data.frame(word=names(TDM), freq=TDM)
+head(TDM,n=10)
+
+
+wordcloud(words=TDM$word,freq=TDM$freq,min.freq=1, max.words = 200, random.order = FALSE,rot.per = 0.35, colors=brewer.pal(8,"Dark2"))
+
+barplot(TDM[1:10,]$freq,las=2,names.arg=TDM[1:10,]$word,col = "lightgreen", main="Most frequesnt words",ylab="word frequencies")
